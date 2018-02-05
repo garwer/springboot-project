@@ -1,0 +1,105 @@
+// jar 包依赖定义文件
+apply from: 'dependency.gradle'
+
+//buildscript里是gradle脚本执行所需依赖，分别是对应的maven库和插件
+buildscript {
+	ext {
+		springBootVersion = '1.5.9.RELEASE'
+	}
+
+//	repositories {
+//		mavenCentral()
+//	}
+	repositories {
+		// maven库
+		def cn = "http://maven.aliyun.com/nexus/content/groups/public/"
+		def abroad = "http://central.maven.org/maven2/"
+		// 先从url中下载jar若没有找到，则在artifactUrls中寻找
+		maven {
+			url cn
+			artifactUrls abroad
+		}
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+//在Gradle中，我们可以通过根Project的allprojects()方法将配置一次性地应用于所有的Project，当然也包括定义Task
+allprojects {
+	//插件将构建web项目的开发环境，生成所需要的.project,.classpath等文件。因为我web开发使用的是eclipse-j2ee版本，所以指定为wtp环境
+	apply plugin: 'eclipse-wtp'
+	apply plugin: 'idea'
+	apply plugin: 'war'
+	//指定项目为java项目，项目编译(在项目提示符下执行：gradle build)时生成项目的jar包。
+	apply plugin: 'java'
+	//加入springboot插件支持
+	apply plugin: 'org.springframework.boot'
+}
+
+//除了allprojects()之外，Project还提供了subprojects()方法用于配置所有的子Project（不包含根Project）
+
+subprojects {
+
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+//providedRuntime
+configurations {
+	//在整个构建过程中排除org.slf4j:log4j-over-slf4j
+	all*.exclude group: 'commons-logging'
+	all*.exclude group: 'log4j'
+	all*.exclude module: 'slf4j-log4j12' //有冲突排除
+	all*.exclude module: 'javaee-api'
+}
+
+
+dependencies {
+	//log4j相关依赖 slf4j做桥接 slf4j1.8好像会有冲突 统一使用slf4j
+	compile("log4j:log4j:1.2.8")
+	//compile ("org.slf4j:slf4j-api:1.7.9") //改为depenency.gradle中配置的统一版本
+	compile "org.slf4j:slf4j-api:${versions.slf4j}"
+	//runtime "ch.qos.logback:logback-classic:${versions.logback}" //无logback不引入
+	// 代码直接调用log4j会被桥接到slf4j
+	runtime "org.slf4j:log4j-over-slf4j:${versions.slf4j}"
+	// 代码直接调用common-logging会被桥接到slf4j
+	runtime "org.slf4j:jcl-over-slf4j:${versions.slf4j}"
+	// 代码直接调用java.util.logging会被桥接到slf4j
+	runtime "org.slf4j:jul-to-slf4j:${versions.slf4j}"
+
+	//测试类junit
+	testCompile 'junit:junit:4.12'
+
+	//springboot相关
+	compile('org.springframework.boot:spring-boot-starter-web')
+
+	//tomcat相关
+	//providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+	providedCompile('org.springframework.boot:spring-boot-starter-tomcat')
+
+	//springboot测试
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+
+	//springboot热部署组件
+	compile("org.springframework.boot:spring-boot-devtools")
+
+	compile libraries.mysql
+
+	compile libraries.mybatis
+
+	compile libraries.mybatisPagehelper
+
+}
+
+
+//其它
+task getHomeDir << {
+	println gradle.gradleHomeDir
+}
