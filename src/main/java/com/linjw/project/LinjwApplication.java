@@ -17,8 +17,8 @@ public class LinjwApplication extends SpringBootServletInitializer{
 	 * @param builder
 	 * @return
 	 */
-	@Override
+/*	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(LinjwApplication.class);
-	}
+	}*/
 }
